@@ -1,18 +1,152 @@
 #------------------------------- 函数 --------------------------------
+
+# \brief 函数名称 : export_symbol【导出逻辑】
+# @target      : 库目标
+# @location    : 生成位置
+function(export_symbol target location)
+    if (NOT TARGET ${target})
+        message(FATAL_ERROR "目标 ${target} 不存在，无法导出符号")
+    endif ()
+    if (NOT location)
+        message(FATAL_ERROR "缺少导出文件路径参数")
+    endif ()
+    string(TOUPPER ${target} TARGET_NAME)
+
+    set(dst "${CMAKE_CURRENT_SOURCE_DIR}/${location}/export.h")
+    if (NOT EXISTS ${dst})
+        configure_file("${CMAKE_SOURCE_DIR}/cmake/global_template.h.in"
+                "${CMAKE_CURRENT_SOURCE_DIR}/${location}/export.h"
+                @ONLY)
+    endif ()
+    target_compile_definitions(${target} PRIVATE "${TARGET_NAME}_LIBRARY")
+endfunction()
+
+
+# \brief 函数名称 : get_all_target_link_libraries【获取所有链接库信息】
+# @target           : 测试目标名称
+# @out_var          : 函数出参
+# @skip_qt          : 是否跳过Qt依赖
+function(get_all_target_link_libraries target out_var skip_qt)
+    if (NOT TARGET ${target})
+        message(WARNING "get_all_target_link_libraries: '${target}' 不是一个有效的 target")
+        set(${out_var} "" PARENT_SCOPE)
+        return()
+    endif ()
+
+    # 防止循环递归
+    set(_visited ${ARGN})
+    list(FIND _visited ${target} _found)
+    if (NOT _found EQUAL -1)
+        set(${out_var} "" PARENT_SCOPE)
+        return()
+    endif ()
+    list(APPEND _visited ${target})
+
+    set(_result "")
+    set(_direct "")
+
+    # 获取直接依赖
+    get_target_property(_libs ${target} LINK_LIBRARIES)
+    if (_libs)
+        list(APPEND _direct ${_libs})
+    endif ()
+
+    get_target_property(_iface_libs ${target} INTERFACE_LINK_LIBRARIES)
+    if (_iface_libs)
+        list(APPEND _direct ${_iface_libs})
+    endif ()
+
+    foreach (lib IN LISTS _direct)
+        if (NOT lib)
+            continue()
+        endif ()
+
+        # 跳过生成表达式（$<...>）
+        if (lib MATCHES "\\$<")
+            continue()
+        endif ()
+
+        # 如果要求跳过 Qt 依赖，则过滤 Qt5/Qt6 前缀的 target
+        if (skip_qt AND lib MATCHES "^(Qt5|Qt6)::")
+            continue()
+        endif ()
+
+        list(APPEND _result ${lib})
+
+        # 若依赖本身是 target，递归收集
+        if (TARGET ${lib})
+            get_all_target_link_libraries(${lib} _child_libs ${skip_qt} ${_visited})
+            if (_child_libs)
+                list(APPEND _result ${_child_libs})
+            endif ()
+        endif ()
+    endforeach ()
+
+    list(REMOVE_DUPLICATES _result)
+    set(${out_var} "${_result}" PARENT_SCOPE)
+endfunction()
+
+
+# 获取某个 target 的所有 imported 动态库依赖
+# 用法: get_imported_shared_libs(<target> <out_var> [<visited>])
+function(get_imported_shared_libs target out_var)
+    if (NOT TARGET ${target})
+        set(${out_var} "" PARENT_SCOPE)
+        return()
+    endif ()
+
+    # 当前构建配置
+    if (CMAKE_BUILD_TYPE)
+        string(TOUPPER ${CMAKE_BUILD_TYPE} CONFIG_UPPER)
+    else ()
+        set(CONFIG_UPPER $<CONFIG>)
+    endif ()
+
+    set(result "")
+
+    # 收集所有依赖
+    set(all_libs "")
+    get_all_target_link_libraries(${target} all_libs ON)
+
+    foreach (lib IN LISTS all_libs)
+        if (TARGET ${lib})
+            get_target_property(dep_type ${lib} TYPE)
+            #
+            if (NOT dep_type STREQUAL "STATIC_LIBRARY")
+                # 尝试获取动态库文件位置
+                set(loc "")
+                get_target_property(loc ${lib} IMPORTED_LOCATION_${CONFIG_UPPER})
+                if (NOT loc)
+                    get_target_property(loc ${lib} IMPORTED_LOCATION)
+                endif ()
+
+                if (loc)
+                    list(APPEND result ${loc})
+                endif ()
+            endif ()
+        endif ()
+    endforeach ()
+
+    # 去重
+    list(REMOVE_DUPLICATES result)
+
+    # 返回给调用者
+    set(${out_var} "${result}" PARENT_SCOPE)
+endfunction()
+
+
 # \brief 函数名称 : copy_target_dependencies【拷贝目标依赖】
 # @target      : 目标
 # @visited     : 避免循环依赖
 function(copy_imported_dependencies target dest_dir)
-#    if (COPY_3RD_LIB)
-        get_imported_shared_libs(${target} deps)
-
-        foreach (lib IN LISTS deps)
-            file(COPY ${lib} DESTINATION ${dest_dir})
-            message(STATUS "已拷贝依赖: ${lib} -> ${dest_dir}")
-        endforeach ()
-#    endif (COPY_3RD_LIB)
+    #    if (COPY_3RD_LIB)
+    get_imported_shared_libs(${target} deps)
+    foreach (lib IN LISTS deps)
+        file(COPY ${lib} DESTINATION ${dest_dir})
+        message(STATUS "已拷贝依赖: ${lib} -> ${dest_dir}")
+    endforeach ()
+    #    endif (COPY_3RD_LIB)
 endfunction()
-
 
 
 # \brief 函数名称 : copy_qt_libs【安装Qt库】
@@ -104,6 +238,25 @@ function(copy_qt_libs dest_dir)
 endfunction()
 
 #------------------------------- 宏 ----------------------------------
+
+# \brief 宏名称 : config_project【CXI公共配置逻辑】
+# @is_qt_module : 是否为Qt依赖模块 True Or False
+macro(config_project is_qt_module)
+    if (MSVC)
+        add_compile_options("/utf-8")
+        add_compile_options("-DUNICODE -D_UNICODE")
+    endif ()
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    if (${is_qt_module})
+        set(CMAKE_AUTORCC ON)
+        set(CMAKE_AUTOMOC ON)
+        list(APPEND CMAKE_AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/uis")
+        set(CMAKE_AUTOUIC ON)
+        set(CMAKE_INCLUDE_CURRENT_DIR ON)
+    endif ()
+endmacro()
+
 
 # \brief 宏名称    : add_standard_module【CXI添加标准模块宏】
 # @target         : 库目标
