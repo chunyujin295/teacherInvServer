@@ -1,0 +1,11 @@
+prefix=D:/Cproject/corex-common-pc-cross/3rdparty/windows/yml-cpp-0.8.0
+exec_prefix=${prefix}
+includedir=D:/Cproject/corex-common-pc-cross/3rdparty/windows/yml-cpp-0.8.0/include
+libdir=D:/Cproject/corex-common-pc-cross/3rdparty/windows/yml-cpp-0.8.0/lib
+
+Name: Yaml-cpp
+Description: A YAML parser and emitter for C++
+Version: 0.8.0
+Requires:
+Libs: -L${libdir} -lyaml-cpp
+Cflags: -I${includedir}
