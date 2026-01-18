@@ -1,4 +1,21 @@
 #------------------------------- 函数 --------------------------------
+# \brief 函数名称 : copy_dir_files【复制目录文件】
+# @src_dir     : 源目录
+# @dst_dir     : 目标目录
+function(copy_dir_files SRC_DIR DST_DIR)
+    if(NOT IS_DIRECTORY "${SRC_DIR}")
+        message(FATAL_ERROR "SRC_DIR is not a directory: ${SRC_DIR}")
+    endif()
+
+    file(GLOB _files
+            "${SRC_DIR}/*")
+
+    if(_files)
+        file(COPY ${_files}
+                DESTINATION "${DST_DIR}")
+    endif()
+endfunction()
+
 
 # \brief 函数名称 : export_symbol【导出逻辑】
 # @target      : 库目标

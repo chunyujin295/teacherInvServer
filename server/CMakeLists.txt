@@ -5,26 +5,26 @@ project(teaInvS_server)
 #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../common/yamltool)
 
 add_executable(${PROJECT_NAME} ""
-        include/server/login/login.h
-        include/server/character/teacher.hpp
-        include/server/character/root.hpp
-        include/server/character/examinformation.hpp
-        include/server/character/invinformation.hpp)
+        include/server/dbinit/dbinit.h
+        src/dbinit/dbinit.cpp
+)
 
 file(GLOB_RECURSE src CONFIGURE_DEPENDS "*.cpp" "*.h")
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 
-find_package(Qt6 REQUIRED COMPONENTS Core NetWork)
+find_package(Qt6 REQUIRED COMPONENTS Core NetWork Sql)
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
         Qt6::Core
         Qt6::Network
+        Qt6::Sql
 )
 
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
         ff_logger
-        ff_yamltool)
+        ff_yamltool
+        ff_simpledb)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

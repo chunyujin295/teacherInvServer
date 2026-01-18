@@ -12,4 +12,5 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/insert3rd.cmake)
 
 add_subdirectory(common/logger)
 add_subdirectory(common/yamltool)
+add_subdirectory(common/simpledb)
 add_subdirectory(server)

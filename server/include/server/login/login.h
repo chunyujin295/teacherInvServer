@@ -9,6 +9,7 @@
 #ifndef TEACHERINVSERVER_LOGIN_H
 #define TEACHERINVSERVER_LOGIN_H
 
+#include <simpledb/simpledb.h>
 #include <FFLogger>
 
 namespace InvServer
@@ -16,7 +17,11 @@ namespace InvServer
 	class ServerLogin
 	{
 	public:
+		ServerLogin();
+		void init();
 
+	private:
+		ff::SimpleDB m_db;
 	};
 }
 

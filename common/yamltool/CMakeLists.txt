@@ -1,4 +1,3 @@
-# 日志工具
 cmake_minimum_required(VERSION 3.15)
 project(ff_yamltool)
 include(${CMAKE_SOURCE_DIR}/cmake/utils.cmake)
