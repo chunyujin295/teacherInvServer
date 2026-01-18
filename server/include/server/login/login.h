@@ -1,10 +1,12 @@
-//
-// Created by 30297 on 2026/1/18.
-//
-
+/*************************************************
+  * 描述：登陆处理
+  *
+  * File：login.h
+  * Author：ff
+  * Date：2026/1/18
+  * Update：
+  * ************************************************/
 #ifndef TEACHERINVSERVER_LOGIN_H
 #define TEACHERINVSERVER_LOGIN_H
-
-#include <FFlogger>
 
 #endif //TEACHERINVSERVER_LOGIN_H

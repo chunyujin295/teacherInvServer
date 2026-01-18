@@ -4,6 +4,7 @@
 
 #include <server/login/login.h>
 
-int main() {
-    return 0;
+int main()
+{
+	return 0;
 }

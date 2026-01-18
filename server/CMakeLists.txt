@@ -4,7 +4,8 @@ project(teaInvS_server)
 #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../common/logger)
 #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../common/yamltool)
 
-add_executable(${PROJECT_NAME} "")
+add_executable(${PROJECT_NAME} ""
+        include/server/login/login.h)
 
 file(GLOB_RECURSE src CONFIGURE_DEPENDS "*.cpp" "*.h")
 target_sources(${PROJECT_NAME} PRIVATE ${src})
