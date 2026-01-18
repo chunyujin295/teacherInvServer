@@ -13,6 +13,3 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/insert3rd.cmake)
 add_subdirectory(common/logger)
 add_subdirectory(common/yamltool)
 add_subdirectory(server)
-
-add_executable(${PROJECT_NAME} main.cpp
-        server/src/login/login.cpp)

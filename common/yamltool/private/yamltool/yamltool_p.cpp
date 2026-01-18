@@ -53,11 +53,11 @@ YamlToolPrivate* YamlToolPrivate::getInstance()
 	return s_instance;
 }
 
-bool YamlToolPrivate::loadFile(mozi::YamlNode& node, const std::string& configFilePath)
+bool YamlToolPrivate::loadFile(ff::YamlNode& node, const std::string& configFilePath)
 {
 	try
 	{
-		node = mozi::YamlNode(configFilePath);
+		node = ff::YamlNode(configFilePath);
 	}
 	catch (std::exception& e)
 	{

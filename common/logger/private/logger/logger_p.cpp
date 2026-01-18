@@ -3,7 +3,6 @@
 #include "yamltool/yamlnode.h"
 #include "yamltool/yamltool.h"
 
-#include <QColor>
 #include <spdlog/logger.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/callback_sink.h>
@@ -13,6 +12,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <QString>
+#include <QList>
 #include <codecvt>
 #include <cstdarg>
 #include <cwctype>
@@ -154,38 +154,38 @@ namespace ff
 			{
 				return std::any_cast<QString>(data).toStdString();
 			}
-			if (data.type() == typeid(QColor))
-			{
-				QColor color = std::any_cast<QColor>(data);
-				return QString("rgba(%1, %2, %3,%4)")
-						.arg(color.red())
-						.arg(color.green())
-						.arg(color.blue())
-						.arg(color.alpha())
-						.toStdString();
-				;
-			}
-			if (data.type() == typeid(QStringList))
-			{
-				auto strList = std::any_cast<QStringList>(data).toStdList();
-				if (strList.empty())
-				{
-					return {};
-				}
-
-				std::string str = "(";
-				for (QString i : strList)
-				{
-					str += "\"" + i.toStdString() + "\",";
-				}
-				str.replace(str.end() - 1,str.end(), "");
-				str += ")";
-				return str;
-			}
-			MZ_LOG_WARN("anythingToString 类型转换失败");// 如果不为空且没有匹配上类型
+			// if (data.type() == typeid(QColor))
+			// {
+			// 	QColor color = std::any_cast<QColor>(data);
+			// 	return QString("rgba(%1, %2, %3,%4)")
+			// 			.arg(color.red())
+			// 			.arg(color.green())
+			// 			.arg(color.blue())
+			// 			.arg(color.alpha())
+			// 			.toStdString();
+			// 	;
+			// }
+			// if (data.type() == typeid(QStringList))
+			// {
+			// 	auto strList = std::any_cast<QStringList>(data).toStdList();
+			// 	if (strList.empty())
+			// 	{
+			// 		return {};
+			// 	}
+			//
+			// 	std::string str = "(";
+			// 	for (QString i : strList)
+			// 	{
+			// 		str += "\"" + i.toStdString() + "\",";
+			// 	}
+			// 	str.replace(str.end() - 1,str.end(), "");
+			// 	str += ")";
+			// 	return str;
+			// }
+			FF_LOG_WARN("anythingToString 类型转换失败");// 如果不为空且没有匹配上类型
 			return {};
 		}
-		MZ_LOG_WARN("anythingToString 入参为空");
+		FF_LOG_WARN("anythingToString 入参为空");
 		return {};
 	}
 }// namespace
@@ -610,17 +610,17 @@ void LogPrivate::loadConfigFile(const std::string& configFilePath)
 {
 	this->m_logger.reset();//重新设置日志
 
-	mozi::YamlNode rootNode;
-	if (!mozi::YamlTool::loadFile(rootNode, configFilePath))
+	ff::YamlNode rootNode;
+	if (!ff::YamlTool::loadFile(rootNode, configFilePath))
 	{
 		throw spdlog::spdlog_ex("加载日志yaml配置文件失败，路径：" + std::filesystem::absolute(configFilePath).string());
 	}
-	mozi::YamlNode logConfigNode = mozi::YamlTool::getNode(rootNode, "log_config");
+	ff::YamlNode logConfigNode = ff::YamlTool::getNode(rootNode, "log_config");
 	if (!logConfigNode.isDefined() || logConfigNode.isNull())
 	{
 		throw spdlog::spdlog_ex("日志yaml配置文件中, <LogConfig> 节点未定义或为空");
 	}
-	mozi::YamlNode loggerNode = mozi::YamlTool::getNode(logConfigNode, "logger");
+	ff::YamlNode loggerNode = ff::YamlTool::getNode(logConfigNode, "logger");
 	if (!loggerNode.isDefined() || loggerNode.isNull())
 	{
 		throw spdlog::spdlog_ex("日志yaml配置文件中, <Logger> 节点未定义或为空");
@@ -630,37 +630,37 @@ void LogPrivate::loadConfigFile(const std::string& configFilePath)
 
 	m_configFilePath = configFilePath;
 	// 获取logger名称
-	auto loggerName = mozi::YamlTool::getDef<std::string>(loggerNode, "name", "default-logger");
+	auto loggerName = ff::YamlTool::getDef<std::string>(loggerNode, "name", "default-logger");
 
 	// 获取DEBUG模式下logger过滤级别
-	auto debugLevelStr = mozi::YamlTool::getDef<std::string>(loggerNode, "debug_level", "trace");
+	auto debugLevelStr = ff::YamlTool::getDef<std::string>(loggerNode, "debug_level", "trace");
 	spdlog::level::level_enum debugLevel = spdlog::level::from_str(debugLevelStr);
 
 	// 获取RELEASE模式下logger过滤级别
-	auto releaseLevelStr = mozi::YamlTool::getDef<std::string>(loggerNode, "release_level", "info");
+	auto releaseLevelStr = ff::YamlTool::getDef<std::string>(loggerNode, "release_level", "info");
 	spdlog::level::level_enum releaseLevel = spdlog::level::from_str(releaseLevelStr);
 
 	// 获取flush_on级别
-	auto flushOnStr = mozi::YamlTool::getDef<std::string>(loggerNode, "flush_on", "trace");
+	auto flushOnStr = ff::YamlTool::getDef<std::string>(loggerNode, "flush_on", "trace");
 	spdlog::level::level_enum flushOn = spdlog::level::from_str(flushOnStr);
 
 	// 获取输出格式
-	auto logPatternStr = mozi::YamlTool::getDef<std::string>(loggerNode, "pattern",
+	auto logPatternStr = ff::YamlTool::getDef<std::string>(loggerNode, "pattern",
 															   "[%Y-%m-%d %H:%M:%S.%e][%n][%^%l%$][thread %t]%v");
 
 	// 获取各级别日志是否按照输出格式输出
-	mozi::YamlNode showCodeLineNode = mozi::YamlTool::getNode(logConfigNode, "showCodeLine");
+	ff::YamlNode showCodeLineNode = ff::YamlTool::getNode(logConfigNode, "showCodeLine");
 	if (showCodeLineNode.isDefined() && !showCodeLineNode.isNull())
 	{
-		m_traceShowLine = mozi::YamlTool::getDef<bool>(showCodeLineNode, "trace", false);
-		m_debugShowLine = mozi::YamlTool::getDef<bool>(showCodeLineNode, "debug", false);
-		m_infoShowLine = mozi::YamlTool::getDef<bool>(showCodeLineNode, "info", false);
-		m_warnShowLine = mozi::YamlTool::getDef<bool>(showCodeLineNode, "warn", true);
-		m_errorShowLine = mozi::YamlTool::getDef<bool>(showCodeLineNode, "error", true);
-		m_criticalShowLine = mozi::YamlTool::getDef<bool>(showCodeLineNode, "critical", true);
+		m_traceShowLine = ff::YamlTool::getDef<bool>(showCodeLineNode, "trace", false);
+		m_debugShowLine = ff::YamlTool::getDef<bool>(showCodeLineNode, "debug", false);
+		m_infoShowLine = ff::YamlTool::getDef<bool>(showCodeLineNode, "info", false);
+		m_warnShowLine = ff::YamlTool::getDef<bool>(showCodeLineNode, "warn", true);
+		m_errorShowLine = ff::YamlTool::getDef<bool>(showCodeLineNode, "error", true);
+		m_criticalShowLine = ff::YamlTool::getDef<bool>(showCodeLineNode, "critical", true);
 	}
 
-	mozi::YamlNode sinksNode = mozi::YamlTool::getNode(logConfigNode, "sinks");
+	ff::YamlNode sinksNode = ff::YamlTool::getNode(logConfigNode, "sinks");
 	std::vector<std::shared_ptr<spdlog::sinks::sink>> sinks;
 
 	if (!sinksNode.isDefined() || sinksNode.isNull() || !sinksNode.isSequence())
@@ -680,7 +680,7 @@ void LogPrivate::loadConfigFile(const std::string& configFilePath)
 		{
 			for (std::size_t i = 0; i < sinksNode.size(); ++i)
 			{
-				mozi::YamlNode sinkNode = mozi::YamlTool::getSequenceNode(sinksNode, i);
+				ff::YamlNode sinkNode = ff::YamlTool::getSequenceNode(sinksNode, i);
 				if (!sinkNode.isDefined() || sinkNode.isNull())
 				{
 					std::cout << "[LogPrivate] sinkNode is not exist, index: " + std::to_string(i);
@@ -689,8 +689,8 @@ void LogPrivate::loadConfigFile(const std::string& configFilePath)
 				else
 				{
 					// auto name = Config::YamlTool::getDef<std::string>(sinkNode, "name", "");
-					auto type = mozi::YamlTool::getDef<std::string>(sinkNode, "type", "");
-					auto sinkLevel = spdlog::level::from_str(mozi::YamlTool::getDef<std::string>(sinkNode, "level", "trace"));
+					auto type = ff::YamlTool::getDef<std::string>(sinkNode, "type", "");
+					auto sinkLevel = spdlog::level::from_str(ff::YamlTool::getDef<std::string>(sinkNode, "level", "trace"));
 
 					// 注意，spdlog默认支持两种sink：多线程mt和单线程st，mt虽然性能比st低，但多线程安全，因此默认使用mt，不再使用st
 					if (type == SINK_TYPE_STDOUT_COLOR_SINK_MT)// 控制台sink
@@ -702,17 +702,17 @@ void LogPrivate::loadConfigFile(const std::string& configFilePath)
 
 					else if (type == SINK_TYPE_DAILY_FILE_MT)// 日期分割文件sink
 					{
-						auto filePath = mozi::YamlTool::getDef<std::string>(sinkNode, "file_path", "");
+						auto filePath = ff::YamlTool::getDef<std::string>(sinkNode, "file_path", "");
 						if (filePath.empty())
 						{
 							std::cout << "[LogPrivate] file_path is empty, index: " + std::to_string(i);
 							continue;
 						}
-						int rotationHour = mozi::YamlTool::getDef<int>(sinkNode, "rotation_hour", 0);
-						int rotationMin = mozi::YamlTool::getDef<int>(sinkNode, "rotation_min", 0);
+						int rotationHour = ff::YamlTool::getDef<int>(sinkNode, "rotation_hour", 0);
+						int rotationMin = ff::YamlTool::getDef<int>(sinkNode, "rotation_min", 0);
 
-						int maxDays = mozi::YamlTool::getDef<int>(sinkNode, "max_days", 0);
-						auto truncate = mozi::YamlTool::getDef<bool>(sinkNode, "truncate", false);// 是否清空截断，false则下次打开追加写入
+						int maxDays = ff::YamlTool::getDef<int>(sinkNode, "max_days", 0);
+						auto truncate = ff::YamlTool::getDef<bool>(sinkNode, "truncate", false);// 是否清空截断，false则下次打开追加写入
 
 						auto fileSink = std::make_shared<spdlog::sinks::daily_file_sink_mt>(filePath, rotationHour, rotationMin, truncate, maxDays);
 						fileSink->set_level(sinkLevel);
@@ -720,15 +720,15 @@ void LogPrivate::loadConfigFile(const std::string& configFilePath)
 					}
 					else if (type == SINK_TYPE_ROTATING_FILE_MT)// 滚动文件sink
 					{
-						auto filePath = mozi::YamlTool::getDef<std::string>(sinkNode, "file_path", "");
+						auto filePath = ff::YamlTool::getDef<std::string>(sinkNode, "file_path", "");
 						if (filePath.empty())
 						{
 							std::cout << "[LogPrivate] file_path is empty, index: " + std::to_string(i);
 							continue;
 						}
-						int maxSize = mozi::YamlTool::getDef<int>(sinkNode, "max_size", 10485760);
-						int maxFiles = mozi::YamlTool::getDef<int>(sinkNode, "max_files", 10);
-						auto rotateOnOpen = mozi::YamlTool::getDef<bool>(sinkNode, "rotate_on_open", false);// 是否在 logger 初始化时就立刻进行一次滚动
+						int maxSize = ff::YamlTool::getDef<int>(sinkNode, "max_size", 10485760);
+						int maxFiles = ff::YamlTool::getDef<int>(sinkNode, "max_files", 10);
+						auto rotateOnOpen = ff::YamlTool::getDef<bool>(sinkNode, "rotate_on_open", false);// 是否在 logger 初始化时就立刻进行一次滚动
 						auto fileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(filePath, maxSize, maxFiles, rotateOnOpen);
 						fileSink->set_level(sinkLevel);
 						sinks.push_back(fileSink);
@@ -736,27 +736,27 @@ void LogPrivate::loadConfigFile(const std::string& configFilePath)
 					else if (type == SINK_TYPE_BASIC_FILE_SINK_MT)
 					{
 
-						auto filePath = mozi::YamlTool::getDef<std::string>(sinkNode, "file_path", "");
+						auto filePath = ff::YamlTool::getDef<std::string>(sinkNode, "file_path", "");
 						if (filePath.empty())
 						{
 							std::cout << "[LogPrivate] file_path is empty, index: " + std::to_string(i);
 							continue;
 						}
 
-						auto truncate = mozi::YamlTool::getDef<bool>(sinkNode, "truncate", false);// 是否清空截断，false则下次打开追加写入
+						auto truncate = ff::YamlTool::getDef<bool>(sinkNode, "truncate", false);// 是否清空截断，false则下次打开追加写入
 						auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(filePath, truncate);
 					}
 					else if (type == SINK_TYPE_COUNT_ROTATING_FILE_MT)// 按行数滚动的日志文件sink
 					{
-						auto filePath = mozi::YamlTool::getDef<std::string>(sinkNode, "file_path", "");
+						auto filePath = ff::YamlTool::getDef<std::string>(sinkNode, "file_path", "");
 						if (filePath.empty())
 						{
 							std::cout << "[LogPrivate] file_path is empty, index: " + std::to_string(i);
 							continue;
 						}
-						int maxCount = mozi::YamlTool::getDef<int>(sinkNode, "max_count", 100000);
-						int maxFiles = mozi::YamlTool::getDef<int>(sinkNode, "max_files", 10);
-						auto rotateOnOpen = mozi::YamlTool::getDef<bool>(sinkNode, "rotate_on_open", false);// 是否在 logger 初始化时就立刻进行一次滚动
+						int maxCount = ff::YamlTool::getDef<int>(sinkNode, "max_count", 100000);
+						int maxFiles = ff::YamlTool::getDef<int>(sinkNode, "max_files", 10);
+						auto rotateOnOpen = ff::YamlTool::getDef<bool>(sinkNode, "rotate_on_open", false);// 是否在 logger 初始化时就立刻进行一次滚动
 						auto fileSink = std::make_shared<CustomSink::count_rotating_file_mt<std::mutex>>(filePath, maxCount, maxFiles, rotateOnOpen);
 						fileSink->set_level(sinkLevel);
 						sinks.push_back(fileSink);
@@ -874,74 +874,74 @@ void LogPrivate::defaultConfig(const std::string& configFilePath)
 	std::string countRotatingSinkMaxFiles = "5";
 	std::string countRotatingSinkRotateOnOpen = "false";
 
-	mozi::YamlNode rootNode;
-	mozi::YamlNode logConfigNode;
-	mozi::YamlNode loggerNode;
-	mozi::YamlNode showCodeLineNode;
-	mozi::YamlNode sinksNode;
+	ff::YamlNode rootNode;
+	ff::YamlNode logConfigNode;
+	ff::YamlNode loggerNode;
+	ff::YamlNode showCodeLineNode;
+	ff::YamlNode sinksNode;
 
-	mozi::YamlTool::setDef<std::string>(loggerNode, "name", loggerName);
-	mozi::YamlTool::setDef<std::string>(loggerNode, "debug_level", debugLevel);
-	mozi::YamlTool::setDef<std::string>(loggerNode, "release_level", releaseLevel);
-	mozi::YamlTool::setDef<std::string>(loggerNode, "flush_on", flushOn);
-	mozi::YamlTool::setDef<std::string>(loggerNode, "pattern", logPatternStr);
+	ff::YamlTool::setDef<std::string>(loggerNode, "name", loggerName);
+	ff::YamlTool::setDef<std::string>(loggerNode, "debug_level", debugLevel);
+	ff::YamlTool::setDef<std::string>(loggerNode, "release_level", releaseLevel);
+	ff::YamlTool::setDef<std::string>(loggerNode, "flush_on", flushOn);
+	ff::YamlTool::setDef<std::string>(loggerNode, "pattern", logPatternStr);
 
-	mozi::YamlTool::setDef<std::string>(showCodeLineNode, "trace", traceShowLine);
-	mozi::YamlTool::setDef<std::string>(showCodeLineNode, "debug", debugShowLine);
-	mozi::YamlTool::setDef<std::string>(showCodeLineNode, "info", infoShowLine);
-	mozi::YamlTool::setDef<std::string>(showCodeLineNode, "warn", warnShowLine);
-	mozi::YamlTool::setDef<std::string>(showCodeLineNode, "error", errorShowLine);
-	mozi::YamlTool::setDef<std::string>(showCodeLineNode, "critical", criticalShowLine);
+	ff::YamlTool::setDef<std::string>(showCodeLineNode, "trace", traceShowLine);
+	ff::YamlTool::setDef<std::string>(showCodeLineNode, "debug", debugShowLine);
+	ff::YamlTool::setDef<std::string>(showCodeLineNode, "info", infoShowLine);
+	ff::YamlTool::setDef<std::string>(showCodeLineNode, "warn", warnShowLine);
+	ff::YamlTool::setDef<std::string>(showCodeLineNode, "error", errorShowLine);
+	ff::YamlTool::setDef<std::string>(showCodeLineNode, "critical", criticalShowLine);
 
-	mozi::YamlNode stdoutColorNode;
-	mozi::YamlTool::setDef<std::string>(stdoutColorNode, "type", stdoutColorSinkType);
-	mozi::YamlTool::setDef<std::string>(stdoutColorNode, "level", stdoutColorSinkLevel);
-	mozi::YamlTool::pushBack(sinksNode, stdoutColorNode);
+	ff::YamlNode stdoutColorNode;
+	ff::YamlTool::setDef<std::string>(stdoutColorNode, "type", stdoutColorSinkType);
+	ff::YamlTool::setDef<std::string>(stdoutColorNode, "level", stdoutColorSinkLevel);
+	ff::YamlTool::pushBack(sinksNode, stdoutColorNode);
 
-	mozi::YamlNode rotatingNode;
-	mozi::YamlTool::setDef<std::string>(rotatingNode, "type", rotatingSinkType);
-	mozi::YamlTool::setDef<std::string>(rotatingNode, "file_path", rotatingSinkFilePath);
-	mozi::YamlTool::setDef<std::string>(rotatingNode, "level", rotatingSinkLevel);
-	mozi::YamlTool::setDef<std::string>(rotatingNode, "max_size", rotatingSinkMaxSize);
-	mozi::YamlTool::setDef<std::string>(rotatingNode, "max_files", rotatingSinkMaxFiles);
-	mozi::YamlTool::setDef<std::string>(rotatingNode, "rotate_on_open", rotatingSinkRotateOnOpen);
-	mozi::YamlTool::pushBack(sinksNode, rotatingNode);
+	ff::YamlNode rotatingNode;
+	ff::YamlTool::setDef<std::string>(rotatingNode, "type", rotatingSinkType);
+	ff::YamlTool::setDef<std::string>(rotatingNode, "file_path", rotatingSinkFilePath);
+	ff::YamlTool::setDef<std::string>(rotatingNode, "level", rotatingSinkLevel);
+	ff::YamlTool::setDef<std::string>(rotatingNode, "max_size", rotatingSinkMaxSize);
+	ff::YamlTool::setDef<std::string>(rotatingNode, "max_files", rotatingSinkMaxFiles);
+	ff::YamlTool::setDef<std::string>(rotatingNode, "rotate_on_open", rotatingSinkRotateOnOpen);
+	ff::YamlTool::pushBack(sinksNode, rotatingNode);
 
-	mozi::YamlNode dailyNode;
-	mozi::YamlTool::setDef<std::string>(dailyNode, "type", dailySinkType);
-	mozi::YamlTool::setDef<std::string>(dailyNode, "file_path", dailySinkFilePath);
-	mozi::YamlTool::setDef<std::string>(dailyNode, "level", dailySinkLevel);
-	mozi::YamlTool::setDef<std::string>(dailyNode, "rotation_hour", dailySinkRotationHour);
-	mozi::YamlTool::setDef<std::string>(dailyNode, "rotation_min", dailySinkRotationMin);
-	mozi::YamlTool::setDef<std::string>(dailyNode, "max_days", dailySinkMaxDays);
-	mozi::YamlTool::setDef<std::string>(dailyNode, "truncate", dailySinkTruncate);
-	mozi::YamlTool::pushBack(sinksNode, dailyNode);
+	ff::YamlNode dailyNode;
+	ff::YamlTool::setDef<std::string>(dailyNode, "type", dailySinkType);
+	ff::YamlTool::setDef<std::string>(dailyNode, "file_path", dailySinkFilePath);
+	ff::YamlTool::setDef<std::string>(dailyNode, "level", dailySinkLevel);
+	ff::YamlTool::setDef<std::string>(dailyNode, "rotation_hour", dailySinkRotationHour);
+	ff::YamlTool::setDef<std::string>(dailyNode, "rotation_min", dailySinkRotationMin);
+	ff::YamlTool::setDef<std::string>(dailyNode, "max_days", dailySinkMaxDays);
+	ff::YamlTool::setDef<std::string>(dailyNode, "truncate", dailySinkTruncate);
+	ff::YamlTool::pushBack(sinksNode, dailyNode);
 
-	mozi::YamlNode basicNode;
-	mozi::YamlTool::setDef<std::string>(basicNode, "type", basicSinkType);
-	mozi::YamlTool::setDef<std::string>(basicNode, "file_path", basicSinkFilePath);
-	mozi::YamlTool::setDef<std::string>(basicNode, "level", basicSinkLevel);
-	mozi::YamlTool::setDef<std::string>(basicNode, "truncate", basicSinkTruncate);
-	mozi::YamlTool::pushBack(sinksNode, basicNode);
+	ff::YamlNode basicNode;
+	ff::YamlTool::setDef<std::string>(basicNode, "type", basicSinkType);
+	ff::YamlTool::setDef<std::string>(basicNode, "file_path", basicSinkFilePath);
+	ff::YamlTool::setDef<std::string>(basicNode, "level", basicSinkLevel);
+	ff::YamlTool::setDef<std::string>(basicNode, "truncate", basicSinkTruncate);
+	ff::YamlTool::pushBack(sinksNode, basicNode);
 
-	mozi::YamlNode countRotatingNode;
-	mozi::YamlTool::setDef<std::string>(countRotatingNode, "type", countRotatingSinkType);
-	mozi::YamlTool::setDef<std::string>(countRotatingNode, "file_path", countRotatingSinkFilePath);
-	mozi::YamlTool::setDef<std::string>(countRotatingNode, "level", countRotatingSinkLevel);
-	mozi::YamlTool::setDef<std::string>(countRotatingNode, "max_count", countRotatingSinkMaxCount);
-	mozi::YamlTool::setDef<std::string>(countRotatingNode, "max_files", countRotatingSinkMaxFiles);
-	mozi::YamlTool::setDef<std::string>(countRotatingNode, "rotate_on_open", countRotatingSinkRotateOnOpen);
-	mozi::YamlTool::pushBack(sinksNode, countRotatingNode);
+	ff::YamlNode countRotatingNode;
+	ff::YamlTool::setDef<std::string>(countRotatingNode, "type", countRotatingSinkType);
+	ff::YamlTool::setDef<std::string>(countRotatingNode, "file_path", countRotatingSinkFilePath);
+	ff::YamlTool::setDef<std::string>(countRotatingNode, "level", countRotatingSinkLevel);
+	ff::YamlTool::setDef<std::string>(countRotatingNode, "max_count", countRotatingSinkMaxCount);
+	ff::YamlTool::setDef<std::string>(countRotatingNode, "max_files", countRotatingSinkMaxFiles);
+	ff::YamlTool::setDef<std::string>(countRotatingNode, "rotate_on_open", countRotatingSinkRotateOnOpen);
+	ff::YamlTool::pushBack(sinksNode, countRotatingNode);
 
-	mozi::YamlTool::addNode(logConfigNode, "logger", loggerNode);
-	mozi::YamlTool::addNode(logConfigNode, "showCodeLine", showCodeLineNode);
-	mozi::YamlTool::addNode(logConfigNode, "sinks", sinksNode);
+	ff::YamlTool::addNode(logConfigNode, "logger", loggerNode);
+	ff::YamlTool::addNode(logConfigNode, "showCodeLine", showCodeLineNode);
+	ff::YamlTool::addNode(logConfigNode, "sinks", sinksNode);
 
-	mozi::YamlTool::addNode(rootNode, "log_config", logConfigNode);
+	ff::YamlTool::addNode(rootNode, "log_config", logConfigNode);
 
 	try
 	{
-		mozi::YamlTool::saveAsFile(rootNode, configFilePath);
+		ff::YamlTool::saveAsFile(rootNode, configFilePath);
 		m_configFilePath = configFilePath;
 		std::cout << "[LogPrivate] 默认日志配置文件完成，配置文件路径：" << std::filesystem::absolute(m_configFilePath) << std::endl;
 	}
@@ -1006,7 +1006,7 @@ std::string LogPrivate::linkString(const std::initializer_list<std::any>& msgLis
 	linkStr.clear();
 	for (const auto& msg: msgList)
 	{
-		std::string msgStr = anyToString(msg);
+		std::string msgStr = ff::anyToString(msg);
 		// if (msgStr.empty())
 		// {
 		// 	return {};

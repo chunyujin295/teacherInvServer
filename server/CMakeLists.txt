@@ -21,4 +21,6 @@ target_link_libraries(${PROJECT_NAME}
         ff_logger
         ff_yamltool)
 
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 copy_imported_dependencies(${PROJECT_NAME} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

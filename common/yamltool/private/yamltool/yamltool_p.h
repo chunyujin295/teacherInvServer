@@ -76,7 +76,7 @@ public:
      * @param configFilePath
      * @return
      */
-    bool loadFile(mozi::YamlNode &node, const std::string &configFilePath);
+    bool loadFile(ff::YamlNode &node, const std::string &configFilePath);
 
     /**
      * 保存文件

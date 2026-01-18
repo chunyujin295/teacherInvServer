@@ -137,12 +137,12 @@ public:
 // 通过宏定义方式调用日志输出：
 #define GET_LINE __FILE__, __LINE__, __FUNCTION__// 宏，用来代替位置、行号、函数信息这三个宏
 
-#define LOG_SET_CONFIG_PATH(...) mozi::Logger::setConfigPath(__VA_ARGS__)
-#define FF_LOG_TRACE(...) mozi::Logger::trace(GET_LINE, {__VA_ARGS__})   // 日志宏，[trace级别]
-#define FF_LOG_DEBUG(...) mozi::Logger::debug(GET_LINE, {__VA_ARGS__})   // 同上 [debug级别]
-#define FF_LOG_INFO(...) mozi::Logger::info(GET_LINE, {__VA_ARGS__})     // 同上 [info级别]
-#define FF_LOG_WARN(...) mozi::Logger::warn(GET_LINE, {__VA_ARGS__})     // 同上 [warn级别]
-#define FF_LOG_ERROR(...) mozi::Logger::error(GET_LINE, {__VA_ARGS__})   // 同上 [error级别]
-#define FF_LOG_CRITI(...) mozi::Logger::critical(GET_LINE, {__VA_ARGS__})// 同上 [critical级别]
+#define LOG_SET_CONFIG_PATH(...) ff::Logger::setConfigPath(__VA_ARGS__)
+#define FF_LOG_TRACE(...) ff::Logger::trace(GET_LINE, {__VA_ARGS__})   // 日志宏，[trace级别]
+#define FF_LOG_DEBUG(...) ff::Logger::debug(GET_LINE, {__VA_ARGS__})   // 同上 [debug级别]
+#define FF_LOG_INFO(...) ff::Logger::info(GET_LINE, {__VA_ARGS__})     // 同上 [info级别]
+#define FF_LOG_WARN(...) ff::Logger::warn(GET_LINE, {__VA_ARGS__})     // 同上 [warn级别]
+#define FF_LOG_ERROR(...) ff::Logger::error(GET_LINE, {__VA_ARGS__})   // 同上 [error级别]
+#define FF_LOG_CRITI(...) ff::Logger::critical(GET_LINE, {__VA_ARGS__})// 同上 [critical级别]
 
 #endif//COREXI_COMMON_PC_LOGGER_H
