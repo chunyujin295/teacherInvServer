@@ -5,7 +5,11 @@ project(teaInvS_server)
 #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../common/yamltool)
 
 add_executable(${PROJECT_NAME} ""
-        include/server/login/login.h)
+        include/server/login/login.h
+        include/server/character/teacher.hpp
+        include/server/character/root.hpp
+        include/server/character/examinformation.hpp
+        include/server/character/invinformation.hpp)
 
 file(GLOB_RECURSE src CONFIGURE_DEPENDS "*.cpp" "*.h")
 target_sources(${PROJECT_NAME} PRIVATE ${src})

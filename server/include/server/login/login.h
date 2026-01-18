@@ -9,4 +9,16 @@
 #ifndef TEACHERINVSERVER_LOGIN_H
 #define TEACHERINVSERVER_LOGIN_H
 
+#include <FFLogger>
+
+namespace InvServer
+{
+	class ServerLogin
+	{
+	public:
+
+	};
+}
+
+
 #endif //TEACHERINVSERVER_LOGIN_H
