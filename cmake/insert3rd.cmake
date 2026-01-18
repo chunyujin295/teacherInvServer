@@ -20,6 +20,7 @@ copy_qt_libs(${CMAKE_RUNTIME_OUTPUT_DIRECTORY} QT_LIBS
         Network
         Sql
         HttpServer
+        WebSockets
 )
 
 copy_dir_files(${CMAKE_SOURCE_DIR}/3rdparty/db ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} )

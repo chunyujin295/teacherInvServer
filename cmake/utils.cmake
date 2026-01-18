@@ -255,6 +255,23 @@ function(copy_qt_libs dest_dir)
 endfunction()
 
 #------------------------------- 宏 ----------------------------------
+# \brief 宏名称 : config_project【CXI公共配置逻辑】
+# @is_qt_module : 是否为Qt依赖模块 True Or False
+macro(config_project is_qt_module)
+    if (MSVC)
+        add_compile_options("/utf-8")
+        add_compile_options("-DUNICODE -D_UNICODE")
+    endif ()
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    if (${is_qt_module})
+        set(CMAKE_AUTORCC ON)
+        set(CMAKE_AUTOMOC ON)
+        list(APPEND CMAKE_AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/uis")
+        set(CMAKE_AUTOUIC ON)
+        set(CMAKE_INCLUDE_CURRENT_DIR ON)
+    endif ()
+endmacro()
 
 # \brief 宏名称 : config_project【CXI公共配置逻辑】
 # @is_qt_module : 是否为Qt依赖模块 True Or False
