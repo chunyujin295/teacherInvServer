@@ -12,12 +12,13 @@ add_executable(${PROJECT_NAME} ""
 file(GLOB_RECURSE src CONFIGURE_DEPENDS "*.cpp" "*.h")
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 
-find_package(Qt6 REQUIRED COMPONENTS Core NetWork Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core NetWork Sql HttpServer)
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
         Qt6::Core
         Qt6::Network
         Qt6::Sql
+        Qt6::HttpServer
 )
 
 target_link_libraries(${PROJECT_NAME}
